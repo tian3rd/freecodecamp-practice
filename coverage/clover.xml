@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1636805972164" clover="3.2.0">
+  <project timestamp="1636805972164" name="All files">
+    <metrics statements="13" coveredstatements="13" conditionals="4" coveredconditionals="4" methods="4" coveredmethods="4" elements="21" coveredelements="21" complexity="0" loc="13" ncloc="13" packages="1" files="1" classes="1"/>
+    <file name="findSymetricDifference.js" path="/Users/Phi/Documents/freecodecamp/coding-interview-prep/findSymetricDifference.js">
+      <metrics statements="13" coveredstatements="13" conditionals="4" coveredconditionals="4" methods="4" coveredmethods="4"/>
+      <line num="15" count="3" type="stmt"/>
+      <line num="16" count="3" type="stmt"/>
+      <line num="17" count="3" type="stmt"/>
+      <line num="18" count="7" type="stmt"/>
+      <line num="19" count="7" type="stmt"/>
+      <line num="20" count="35" type="cond" truecount="2" falsecount="0"/>
+      <line num="21" count="18" type="stmt"/>
+      <line num="23" count="17" type="stmt"/>
+      <line num="28" count="3" type="stmt"/>
+      <line num="29" count="18" type="cond" truecount="2" falsecount="0"/>
+      <line num="31" count="9" type="stmt"/>
+      <line num="35" count="3" type="stmt"/>
+      <line num="38" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>

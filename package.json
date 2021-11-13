@@ -1,0 +1,13 @@
+{
+  "name": "freecodecamp-practice",
+  "version": "1.0.0",
+  "description": "A hands-on practice repo based on freecodecamp",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "freecodecamp", "practice", "javascript"
+  ],
+  "author": "Phi",
+  "license": "ISC"
+}
