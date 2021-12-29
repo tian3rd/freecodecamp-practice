@@ -1583,3 +1583,446 @@ const decAction = () => ({ type: DECREMENT }); // Define an action creator for d
 
 const store = Redux.createStore(counterReducer); // Define the Redux store here, passing in your reducers
 ```
+
+## React and Redux
+
+1. Review: Typically, in a React Redux app, you create a single Redux store that manages the state of your entire app. Your React components subscribe to only the pieces of data in the store that are relevant to their role. Then, you dispatch actions directly from React components, which then trigger store updates. Because Redux is not designed to work with React out of the box, you need to use the react-redux package. It provides a way for you to pass Redux state and dispatch to your React components as props.
+
+2. Origial React snippet.
+
+```jsx
+class DisplayMessages extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			input: "",
+			messages: [],
+		};
+		this.handleChange = this.handleChange.bind(this);
+		this.submitMessage = this.submitMessage.bind(this);
+	}
+	handleChange(event) {
+		this.setState({ input: event.target.value });
+	}
+	submitMessage() {
+		const newMessages = this.state.messages.concat([this.state.input]);
+		this.setState({
+			input: "",
+			messages: newMessages,
+		});
+	}
+	render() {
+		// map here before return statement
+		const items = this.state.messages.map((message, index) => (
+			<li key={index}>{message}</li>
+		));
+		return (
+			<div>
+				<h2>Type in a new Message:</h2>
+				{/* Render an input, button, and ul below this line */}
+				<input
+					onChange={this.handleChange}
+					type="text"
+					value={this.state.input}
+				/>
+				<button onClick={this.submitMessage}>Submit</button>
+				<ul>{items}</ul>
+			</div>
+		);
+	}
+}
+```
+
+3. Extract state logic to Redux.
+
+```javascript
+const ADD = "ADD";
+
+const addMessage = (message) => {
+	return {
+		type: ADD,
+		message, // message: message
+	};
+};
+
+const messageReducer = (state = [], action) => {
+	if (action.type === ADD) return state.concat([action.message]);
+	else return state;
+};
+
+const store = Redux.createStore(messageReducer);
+```
+
+4. User `Provider` to connect Redux store to React. Next provide React access to the Redux store and the actions it needs to dispatch updates. React Redux provides its `react-redux` package to help accomplish these tasks.
+   - The `Provider` is a wrapper component from React Redux that wraps your React app. This wrapper then allows you to access the Redux store and dispatch functions throughout your component tree. `Provider` takes two props, the Redux store and the child components of your app.
+
+```jsx
+// Redux:
+const ADD = "ADD";
+
+const addMessage = (message) => {
+	return {
+		type: ADD,
+		message,
+	};
+};
+
+const messageReducer = (state = [], action) => {
+	switch (action.type) {
+		case ADD:
+			return [...state, action.message];
+		default:
+			return state;
+	}
+};
+
+const store = Redux.createStore(messageReducer);
+
+// React:
+
+class DisplayMessages extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			input: "",
+			messages: [],
+		};
+		this.handleChange = this.handleChange.bind(this);
+		this.submitMessage = this.submitMessage.bind(this);
+	}
+	handleChange(event) {
+		this.setState({
+			input: event.target.value,
+		});
+	}
+	submitMessage() {
+		this.setState((state) => {
+			const currentMessage = state.input;
+			return {
+				input: "",
+				messages: state.messages.concat(currentMessage),
+			};
+		});
+	}
+	render() {
+		return (
+			<div>
+				<h2>Type in a new Message:</h2>
+				<input value={this.state.input} onChange={this.handleChange} />
+				<br />
+				<button onClick={this.submitMessage}>Submit</button>
+				<ul>
+					{this.state.messages.map((message, idx) => {
+						return <li key={idx}>{message}</li>;
+					})}
+				</ul>
+			</div>
+		);
+	}
+}
+
+const Provider = ReactRedux.Provider;
+
+class AppWrapper extends React.Component {
+	// Render the Provider below this line
+	render() {
+		return (
+			<Provider store={store}>
+				<DisplayMessages />
+			</Provider>
+		);
+	}
+	// Change code above this line
+}
+```
+
+5. Map state to props.
+   - The `Provider` component allows you to provide state and dispatch to your React components, but you must specify exactly what state and actions you want. This way, you make sure that each component only has access to the state it needs. You accomplish this by creating two functions: `mapStateToProps()` and `mapDispatchToProps()`.
+   - In these functions, you declare what pieces of state you want to have access to and which action creators you need to be able to dispatch. Once these functions are in place, you'll see how to use the React Redux connect method to connect them to your components in another challenge.
+   - Note: Behind the scenes, React Redux uses the `store.subscribe()` method to implement `mapStateToProps()`.
+
+```jsx
+const state = [];
+
+const mapStateToProps = (state) => {
+	return { messages: state };
+};
+```
+
+6. Map dispatch to props.
+   - The `mapDispatchToProps()` function is used to provide specific action creators to your React components so they can dispatch actions against the Redux store. It's similar in structure to the `mapStateToProps()` function.
+   - It returns an object that maps dispatch actions to property names, which become component props. However, instead of returning a piece of state, each property returns a function that calls dispatch with an action creator and any relevant action data. You have access to this dispatch because it's passed in to `mapDispatchToProps()` as a parameter when you define the function.
+   - Behind the scenes, React Redux is using Redux's `store.dispatch()` to conduct these dispatches with `mapDispatchToProps()`. This is similar to how it uses `store.subscribe()` for components that are mapped to state.
+
+```jsx
+const addMessage = (message) => {
+	return {
+		type: "ADD",
+		message: message,
+	};
+};
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		submitNewMessage: (newMessage) => dispatch(addMessage(newMessage)),
+	};
+};
+```
+
+7. Connect Redux to React.
+   - Now that we've written both the `mapStateToProps()` and the `mapDispatchToProps()` functions, we can use them to map state and dispatch to the props of one of your React components. The connect method from React Redux can handle this task. This method takes two optional arguments, `mapStateToProps()` and `mapDispatchToProps()`. They are optional because you may have a component that only needs access to state but doesn't need to dispatch any actions, or vice versa.
+   - Note: If you want to omit one of the arguments to the connect method, you pass `null` in its place.
+
+```jsx
+const addMessage = (message) => {
+	return {
+		type: "ADD",
+		message: message,
+	};
+};
+
+const mapStateToProps = (state) => {
+	return {
+		messages: state,
+	};
+};
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		submitNewMessage: (message) => {
+			dispatch(addMessage(message));
+		},
+	};
+};
+
+// This term generally refers to React components that are not directly connected to Redux. They are simply responsible for the presentation of UI and do this as a function of the props they receive.
+class Presentational extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+	render() {
+		return <h3>This is a Presentational Component</h3>;
+	}
+}
+
+const connect = ReactRedux.connect;
+const ConnectedComponent = connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(Presentational);
+```
+
+8. Full example.
+
+```jsx
+// Redux:
+const ADD = "ADD";
+
+const addMessage = (message) => {
+	return {
+		type: ADD,
+		message: message,
+	};
+};
+
+const messageReducer = (state = [], action) => {
+	switch (action.type) {
+		case ADD:
+			return [...state, action.message];
+		default:
+			return state;
+	}
+};
+
+const store = Redux.createStore(messageReducer);
+
+// React:
+class Presentational extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			input: "",
+			messages: [],
+		};
+		this.handleChange = this.handleChange.bind(this);
+		this.submitMessage = this.submitMessage.bind(this);
+	}
+	handleChange(event) {
+		this.setState({
+			input: event.target.value,
+		});
+	}
+	submitMessage() {
+		this.setState((state) => {
+			const currentMessage = state.input;
+			return {
+				input: "",
+				messages: state.messages.concat(currentMessage),
+			};
+		});
+	}
+	render() {
+		return (
+			<div>
+				<h2>Type in a new Message:</h2>
+				<input value={this.state.input} onChange={this.handleChange} />
+				<br />
+				<button onClick={this.submitMessage}>Submit</button>
+				<ul>
+					{this.state.messages.map((message, idx) => {
+						return <li key={idx}>{message}</li>;
+					})}
+				</ul>
+			</div>
+		);
+	}
+}
+
+// React-Redux:
+const mapStateToProps = (state) => {
+	return { messages: state };
+};
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		submitNewMessage: (newMessage) => {
+			dispatch(addMessage(newMessage));
+		},
+	};
+};
+
+const Provider = ReactRedux.Provider;
+const connect = ReactRedux.connect;
+
+// Define the Container component here:
+const Container = connect(mapStateToProps, mapDispatchToProps)(Presentational);
+
+class AppWrapper extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+	render() {
+		return (
+			<Provider store={store}>
+				<Container />
+			</Provider>
+		);
+	}
+}
+```
+
+9. Extract local state into Redux.
+
+```jsx
+// Redux:
+const ADD = "ADD";
+
+const addMessage = (message) => {
+	return {
+		type: ADD,
+		message: message,
+	};
+};
+
+const messageReducer = (state = [], action) => {
+	switch (action.type) {
+		case ADD:
+			return [...state, action.message];
+		default:
+			return state;
+	}
+};
+
+const store = Redux.createStore(messageReducer);
+
+// React:
+const Provider = ReactRedux.Provider;
+const connect = ReactRedux.connect;
+
+// Change code below this line
+class Presentational extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			input: "",
+		};
+		this.handleChange = this.handleChange.bind(this);
+		this.submitMessage = this.submitMessage.bind(this);
+	}
+	handleChange(event) {
+		this.setState({
+			input: event.target.value,
+		});
+	}
+	submitMessage() {
+		this.setState({
+			input: "",
+		});
+		// dispatch the action here
+		this.props.submitNewMessage(this.state.input);
+	}
+	render() {
+		return (
+			<div>
+				<h2>Type in a new Message:</h2>
+				<input value={this.state.input} onChange={this.handleChange} />
+				<br />
+				<button onClick={this.submitMessage}>Submit</button>
+				<ul>
+					{/* map over the messages here */}
+					{this.props.messages.map((message, idx) => {
+						return <li key={idx}>{message}</li>;
+					})}
+				</ul>
+			</div>
+		);
+	}
+}
+// Change code above this line
+
+const mapStateToProps = (state) => {
+	return { messages: state };
+};
+
+const mapDispatchToProps = (dispatch) => {
+	return {
+		submitNewMessage: (message) => {
+			dispatch(addMessage(message));
+		},
+	};
+};
+
+const Container = connect(mapStateToProps, mapDispatchToProps)(Presentational);
+
+class AppWrapper extends React.Component {
+	render() {
+		return (
+			<Provider store={store}>
+				<Container />
+			</Provider>
+		);
+	}
+}
+```
+
+10. Moving on!
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider, connect } from "react-redux";
+import { createStore, combineReducers, applyMiddleware } from "redux";
+import thunk from "redux-thunk";
+
+import rootReducer from "./redux/reducers";
+import App from "./components/App";
+
+const store = createStore(rootReducer, applyMiddleware(thunk));
+
+ReactDOM.render(
+	<Provider store={store}>
+		<App />
+	</Provider>,
+	document.getElementById("root")
+);
+```
