@@ -1213,3 +1213,107 @@ class GameOfChance extends React.Component {
 	}
 }
 ```
+
+34. Change inline CSS conditionally based on component state.
+
+```jsx
+class GateKeeper extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			input: "",
+		};
+		this.handleChange = this.handleChange.bind(this);
+	}
+	handleChange(event) {
+		this.setState({ input: event.target.value });
+	}
+	render() {
+		let inputStyle = {
+			border: "1px solid black",
+		};
+		if (this.state.input.length > 15) {
+			inputStyle.border = "3px solid red";
+		}
+		return (
+			<div>
+				<h3>Don't Type Too Much:</h3>
+				<input
+					type="text"
+					style={inputStyle}
+					value={this.state.input}
+					onChange={this.handleChange}
+				/>
+			</div>
+		);
+	}
+}
+```
+
+35. Use `Array.map() to dynamically render elements.
+
+```jsx
+const textAreaStyles = {
+	width: 235,
+	margin: 5,
+};
+
+class MyToDoList extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			userInput: "",
+			toDoList: [],
+		};
+		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleChange = this.handleChange.bind(this);
+	}
+	handleSubmit() {
+		const itemsArray = this.state.userInput.split(",");
+		this.setState({
+			toDoList: itemsArray,
+		});
+	}
+	handleChange(e) {
+		this.setState({
+			userInput: e.target.value,
+		});
+	}
+	render() {
+		const items = this.state.toDoList.map((item, index) => {
+			return <li key={index}>{item}</li>;
+		});
+		return (
+			<div>
+				<textarea
+					onChange={this.handleChange}
+					value={this.state.userInput}
+					style={textAreaStyles}
+					placeholder="Separate Items With Commas"
+				/>
+				<br />
+				<button onClick={this.handleSubmit}>Create List</button>
+				<h1>My "To Do" List:</h1>
+				<ul>{items}</ul>
+			</div>
+		);
+	}
+}
+```
+
+36. Use `Array.filter()` to dynamically filter an array.
+37. Render React on the server with `renderToString()`. The `renderToString()` method is provided on `ReactDOMServer`, which is available as a global object. The method takes one argument which is a React element.
+    - There are two key reasons why rendering on the server may be used in a real world app. First, without doing this, your React apps would consist of a relatively empty HTML file and a large bundle of JavaScript when it's initially loaded to the browser. This may not be ideal for search engines that are trying to index the content of your pages so people can find you. If you render the initial HTML markup on the server and send this to the client, the initial page load contains all of the page's markup which can be crawled by search engines.
+    - Second, this creates a faster initial page load experience because the rendered HTML is smaller than the JavaScript code of the entire app. React will still be able to recognize your app and manage it after the initial load.
+
+```jsx
+class App extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+	render() {
+		return <div />;
+	}
+}
+ReactDOMServer.renderToString(<App />);
+```
